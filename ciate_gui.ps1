@@ -13,8 +13,8 @@ function get_address([string]$line){ #Get the path for the executable from the d
 #===========================================================
 #    VARIABLES
 #===========================================================
-$testname_array = @() #holds variable names for each of the created checkboxes
-$arg_array = @() #holds the variable names for each of the created text boxes
+#$testname_array = @() #holds variable names for each of the created checkboxes
+#$arg_array = @() #holds the variable names for each of the created text boxes
 $path_array = @() #Holds the EXE path for each selftest
 $name_array = @() #Holds the name of the test
 $entered_args = @()# Takes the arguments from each text box and holds for use in executable
@@ -51,8 +51,17 @@ $main_form.AutoSize = $true
 # Execute button
 $run_button = New-Object System.Windows.Forms.Button
 $run_button.Text = 'Run Tests'
-$run_button.Location = New-Object System.Drawing.Point(400, 10)
+$run_button.Location = New-Object System.Drawing.Point(400, 400)
+$run_button.Anchor = Bottom
 $main_form.Controls.Add($run_button)
+
+#Logging textbox
+$log_path = New-Object System.Windows.Forms.TextBox
+$log_path.Text = ""
+$log_path.Location = New-Object System.Drawing.Point (425, 40)
+$log_path.Width = 300
+$log_path.ScrollBars = New-Object System.Windows.Forms.ScrollBar("Horizontal")
+$main_form.Controls.Add($log_path)
 
 #Test Label
 $testLabel = New-Object System.Windows.Forms.Label
@@ -77,12 +86,12 @@ for($i = 0; $i -lt $lines; $i++){
     #titles (saved as test_[i])
     New-Object System.Windows.Forms.Checkbox | `
     Set-Variable -Name ("test_" + $i)
-    $testname_array += ("$test_" + $i) 
+    #$testname_array += ("$test_" + $i) 
 
     #arg boxes (saved as arguments_[i])
     New-Object System.Windows.Forms.TextBox | `
     Set-Variable -Name ("arguments_" + $i)
-    $arg_array += ("$arguments_" + $i)
+    #$arg_array += ("$arguments_" + $i)
 }
 
 #Properties to checkboxes
@@ -125,6 +134,11 @@ Get-Variable -Name arguments_* -ValueOnly | ForEach-Object {
 #---------------------------------------------------------------------
 
 $run_button.Add_Click({
+    #check log path
+    if(log_path.Text -eq ""){
+        log_path.Text = $PSScriptRoot + "tests_log./txt"
+    }
+
     #Get arguments from each text box (if there are no arguments, ~ will be saved)
     Get-Variable -Name arguments_* -ValueOnly | ForEach-Object {
             $holder= $_.Text
@@ -140,9 +154,14 @@ $run_button.Add_Click({
     Get-Variable -name test_* -ValueOnly | ForEach-Object {
         
         if($_.Checked){
-           #Get arguments from table and run exe
-           Start-Process $path_array[$iter] -ArgumentList $entered_args[$iter]
-            
+            #Get arguments from table and run exe
+            Start-Process $path_array[$iter] -ArgumentList $entered_args[$iter]
+            if($LASTEXITCODE -ne 0){
+                #log failure
+                Out-File -FilePath $log_path.Text -Append
+            }else{
+                #log success
+            }
         }
         $iter++
     }
