@@ -10,6 +10,14 @@ function get_address([string]$line){ #Get the path for the executable from the d
     return $path
 }
 
+function get_date(){
+    return Get-Date -Format ShortDatePattern #| Out-String
+}
+
+function get_time(){
+    return Get-Date -Format ShortTimePattern #| Out-String
+}
+
 #===========================================================
 #    VARIABLES
 #===========================================================
@@ -20,7 +28,7 @@ $name_array = @() #Holds the name of the test
 $entered_args = @()# Takes the arguments from each text box and holds for use in executable
 $iter = 0 #iterator
 $lines = 0 # Num of lines in the doc
-
+$error_count = 0 # Number of tests with return codes of anything other than 0
 
 #Get number of lines in a text document in variable $doc_length
 Set-Location $PSScriptRoot
@@ -52,18 +60,20 @@ $main_form.AutoSize = $true
 $run_button = New-Object System.Windows.Forms.Button
 $run_button.Text = 'Run Tests'
 $run_button.Location = New-Object System.Drawing.Point(425, 75)
-$run_button.Width = 300
+$run_button.Width = 150
 $run_button.Height = 50
-$run_button.Font = [System.Drawing.Font]::new("Microsoft Sans Serif", 10, [System.Drawing.FontStyle]::Italic)
+$run_button.Font = [System.Drawing.Font]::new("Microsoft Sans Serif", 12, [System.Drawing.FontStyle]::Italic)
 $main_form.Controls.Add($run_button)
 
 #Logging textbox
 $log_path = New-Object System.Windows.Forms.TextBox
 $log_path.Text = ""
-$log_path.Location = New-Object System.Drawing.Point (425, 40)
+$log_path.Location = New-Object System.Drawing.Point (530, 40)
 $log_path.Width = 300
 #$log_path.ScrollBars = New-Object System.Windows.Forms.ScrollBar("Horizontal")
 $main_form.Controls.Add($log_path)
+
+#Textbox autofiller
 
 #Test Label
 $testLabel = New-Object System.Windows.Forms.Label
@@ -86,8 +96,8 @@ $main_form.Controls.Add($argLabel)
 #LogFile path label
 $logLabel = New-Object System.Windows.Forms.Label
 $logLabel.Text = "Log File Path"
-$logLabel.Location = New-Object System.Drawing.Point ( 425, 10)
-$logLabel.Font = [System.Drawing.Font]::new("Microsoft Sans Serif", 10, [System.Drawing.FontStyle]::Bold)
+$logLabel.Location = New-Object System.Drawing.Point (425, 40)
+$logLabel.Font = [System.Drawing.Font]::new("Microsoft Sans Serif", 10)
 $logLabel.Width = 100 
 $logLabel.Height = 30
 $main_form.Controls.Add($logLabel)
@@ -109,7 +119,7 @@ for($i = 0; $i -lt $lines; $i++){
 [int]$iter = 0 #Spaces out GUI evenly
 Get-Variable -name test_* -ValueOnly | ForEach-Object {
    $_.Text = $name_array[$iter]
-   $_.Location = New-Object System.Drawing.Point (30, (40 + 30*$iter))
+   $_.Location = New-Object System.Drawing.Point (30, (38 + 30*$iter))
    $_.Width = 100
    $_.Height = 30
    $iter++
@@ -146,22 +156,19 @@ Get-Variable -Name arguments_* -ValueOnly | ForEach-Object {
 
 $run_button.Add_Click({
     #check log path
-    if(log_path.Text -eq ""){
-        log_path.Text = $PSScriptRoot + "tests_log./txt"
+    if($log_path.Text -eq ""){
+        $log_path.Text = $PSScriptRoot + "\test_log.txt"
     }
 
-    #Start Log path:
-    $timestamp = Get-Date -DisplayHint Time
-    "Test started at " + $timestamp | Out-File -FilePath $log_path.Text -Append
+    #Start Log:
+    $time = get_time
+    $date = get_date
+    "Test started on " + $date + " at " + $time + "`n"| Out-File -FilePath $log_path.Text -Append
 
-    #Get arguments from each text box (if there are no arguments, ~ will be saved)
+    #Get arguments from each text box 
     Get-Variable -Name arguments_* -ValueOnly | ForEach-Object {
             $holder= $_.Text
-            $entered_args += $holder   
-       
-    }
-    for($i = 0; $i -lt $entered_args.Length; $i++){
-        
+            $entered_args += $holder 
     }
 
     #Find selected checkboxes
@@ -170,18 +177,25 @@ $run_button.Add_Click({
         
         if($_.Checked){
             #Get arguments from table and run exe
-            Start-Process $path_array[$iter] -ArgumentList $entered_args[$iter]
-            if($LASTEXITCODE -ne 0){
+            Start-Process $path_array[$iter] -ArgumentList $entered_args[$iter] | Wait-Process
+            $return_val = $LASTEXITCODE
+            if($return_val -ne 0){
                 #log failure
-                $timestamp + "`t" + $name_array[$iter] + " FAILED!" | Out-File -FilePath $log_path.Text -Append
-                "`t" + $name_array[$iter] + "Error Code: " + $LASTEXITCODE | Out-File -FilePath $log_path.Text -Append
+                #$timestamp + "`t" + $name_array[$iter] + " FAILED!" | Add-Content -path $log_path.Text
+                $text_string = "`t" + $name_array[$iter] + " FAILED!" #Get values into one string
+                Add-Content -path $log_path.Text -Value $text_string 
+                "`t" + $name_array[$iter] + " Error Code: " + $return_val | Out-File -FilePath $log_path.Text -Append
+
             }else{
                 #log success
-                $timestamp + "`t" + $name_array[$iter] + " PASSED!" | Out-File -FilePath $log_path.Text -Append
+                $text_string = "`t" + $name_array[$iter] + " PASSED!" #Get values into one string
+                Add-Content -path $log_path.Text -Value $text_string
             }
         }
         $iter++
     }
+
 })
 
 [void]$main_form.ShowDialog()
+# 1 2 selftest "C:\Users\klepeter\Documents\PeterK_Local\CIATE\Powershell GUI\LogFile.txt"
