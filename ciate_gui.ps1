@@ -1,4 +1,6 @@
-﻿Clear-Host
+﻿# For help , reference the README in westeros:8080 http://westeros:8080/tfs/InstrumentsAndApplications/QA/_versionControl?path=%24%2FQA%2FCIATE%2FTools%20and%20Utilities%2FPowerShell%20Program%20Runner
+
+Clear-Host
 Remove-Variable * -ErrorAction SilentlyContinue #Remove all variables from last run
 
 
