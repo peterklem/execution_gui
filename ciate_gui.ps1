@@ -1,6 +1,7 @@
 ﻿Clear-Host
 Remove-Variable * -ErrorAction SilentlyContinue #Remove all variables from last run
 
+
 #Load required Assemblies
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 
@@ -256,4 +257,3 @@ $run_button.Add_Click({ # Runs if "Run
 })
 
 [void]$main_form.ShowDialog()
-# 1 2 selftest "C:\Users\klepeter\Documents\PeterK_Local\CIATE\GUI_github\execution_gui\LogFile.txt"
