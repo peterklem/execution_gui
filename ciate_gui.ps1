@@ -69,6 +69,14 @@ $run_button.Height = 50
 $run_button.Font = [System.Drawing.Font]::new("Microsoft Sans Serif", 12, [System.Drawing.FontStyle]::Italic)
 $main_form.Controls.Add($run_button)
 
+#Help button
+$help_button = New-Object System.Windows.Forms.Button
+$help_button.Text = "Help"
+$help_button.Location = New-Object System.Drawing.Point (900, 10)
+$help_button.Width = 40
+$help_button.Height = 20
+$main_form.Controls.Add($help_button)
+
 #Logging textbox
 $log_path = New-Object System.Windows.Forms.TextBox
 $log_path.Text = ""
@@ -191,7 +199,7 @@ Get-Variable -Name arguments_* -ValueOnly | ForEach-Object {
 #===================================================================
 
 #---------------------------------------------------------------------
-$select_file.Add_Click({
+$select_file.Add_Click({ # Select file button pressed
     #Add-Type -AssemblyName System.Windows.Forms
     $f = new-object Windows.Forms.OpenFileDialog
     $f.InitialDirectory = $PSScriptRoot
@@ -202,7 +210,8 @@ $select_file.Add_Click({
     $log_path.Text = $f.Filename
 })
 
-$run_button.Add_Click({ # Runs if "Run  
+
+$run_button.Add_Click({ #Run tests button pressed
     #check log path
     if($log_path.Text -eq ""){ # If no log path inputted
         $log_path.Text = $PSScriptRoot + "\test_log.txt" #
@@ -254,6 +263,11 @@ $run_button.Add_Click({ # Runs if "Run
         $iter++
     }
 
+})
+
+$help_button.Add_Click({ #Help button is clicked
+    cd $PSScriptRoot
+    Start-Process 'C:\Windows\system32\notepad.exe' -ArgumentList '.\README.txt'
 })
 
 [void]$main_form.ShowDialog()
