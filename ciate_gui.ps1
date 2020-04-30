@@ -11,12 +11,12 @@ function get_address([string]$line){ #Get the path for the executable from the d
     return $path
 }
 
-function get_date(){ #Used to get date in 
-    return get-date -format "MM/dd/yy" #| Out-String
+function get_date(){ #Gets date in format below 
+    return get-date -format "MM/dd/yy"
 }
 
-function get_time(){
-    return get-date -format "hh:mm:ss" #| Out-String
+function get_time(){ #Gets time in format below
+    return get-date -format "hh:mm:ss"
 }
 
 #===========================================================
